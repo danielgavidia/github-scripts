@@ -1,5 +1,7 @@
 import axios from "axios";
 import * as dotenv from "dotenv";
+import type { GithubResponse } from "./types";
+import { getPullRequestString } from "./getPullRequestString";
 
 dotenv.config();
 
@@ -29,16 +31,25 @@ const getPullRequests = async () => {
     params: {
       q: `type:pr author:${GITHUB_USERNAME} created:${startOfDay}..${endOfDay}`,
       sort: "created",
-      order: "desc",
+      order: "asc",
     },
   });
 
-  return response.data.items;
+  const data: GithubResponse[] = response.data.items.map((item: any) => ({
+    html_url: item.html_url,
+    title: item.title,
+  }));
+
+  const dataParsed = data.map((d) => getPullRequestString(d));
+
+  return dataParsed;
 };
 
 getPullRequests()
   .then((pullRequests) => {
-    console.log(pullRequests);
+    pullRequests.map((pr) => {
+      console.log(pr);
+    });
   })
   .catch((error) => {
     console.error("Error fetching pull requests:", error);
